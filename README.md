@@ -1,10 +1,8 @@
-# DockBeautifier
+## DockGlo
 
-A Python prototype that analyzes Dock-click patterns to suggest an optimal order.  
-Press one button → your Dock rearranges so the most-used (and most mis-clicked) apps slide into the most convenient spots.
+A tool to beautify the macOS Dock.
 
-## Setup
-```bash
-python tracker_sim.py   # simulate data
-pytest                  # run tests
-python reorder.py       # print suggested order
+### Features
+- Logs clicks on the Dock using Swift event-taps.
+- Ingests updates and stats.
+- Runs tests to ensure functionality.

@@ -1,0 +1,3 @@
+/Applications/ChatGPT.app/|com.openai.chat
+/Applications/Notion Calendar.app/|com.cron.electron
+/Applications/Spotify.app/|com.spotify.client

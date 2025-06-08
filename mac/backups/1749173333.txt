@@ -1,0 +1,3 @@
+/Applications/Cursor.app/|com.todesktop.230313mzl4w4u92
+/Applications/Opal.app/|com.withopal.opalmacos
+/Applications/Warp.app/|dev.warp.Warp-Stable

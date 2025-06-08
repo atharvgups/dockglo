@@ -1,0 +1,9 @@
+/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/|com.apple.Safari
+/System/Applications/Mail.app/|com.apple.mail
+/Applications/Spotify.app/|com.spotify.client
+/System/Applications/Utilities/Terminal.app/|com.apple.Terminal
+/Applications/Cursor.app/|com.todesktop.230313mzl4w4u92
+/Applications/Opal.app/|com.withopal.opalmacos
+/Applications/Warp.app/|dev.warp.Warp-Stable
+/System/Applications/Messages.app/|com.apple.MobileSMS
+/Applications/Plover.app/|org.openstenoproject.plover

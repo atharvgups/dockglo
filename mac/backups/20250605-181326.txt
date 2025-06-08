@@ -1,0 +1,19 @@
+com.apple.dock.plist	com.apple.MobileSMS	file:///Applications/com.apple.dock.plist%09com.apple.MobileSMS.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	company.thebrowser.Browser	file:///Applications/com.apple.dock.plist%09company.thebrowser.Browser.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.apple.podcasts	file:///Applications/com.apple.dock.plist%09com.apple.podcasts.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.hnc.Discord	file:///Applications/com.apple.dock.plist%09com.hnc.Discord.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.TickTick.task.mac	file:///Applications/com.apple.dock.plist%09com.TickTick.task.mac.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.openai.chat	file:///Applications/com.apple.dock.plist%09com.openai.chat.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.todesktop.230313mzl4w4u92	file:///Applications/com.apple.dock.plist%09com.todesktop.230313mzl4w4u92.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	io.capacities	file:///Applications/com.apple.dock.plist%09io.capacities.app.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.bambulab.bambu-studio	file:///Applications/com.apple.dock.plist%09com.bambulab.bambu-studio.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+Autodesk	file:///Applications/Autodesk.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+Notion	file:///Applications/Notion.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.spotify.client	file:///Applications/com.apple.dock.plist%09com.spotify.client.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	com.withopal.opalmacos	file:///Applications/com.apple.dock.plist%09com.withopal.opalmacos.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	org.openstenoproject.plover	file:///Applications/com.apple.dock.plist%09org.openstenoproject.plover.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	org.collegeboard.bluebook	file:///Applications/com.apple.dock.plist%09org.collegeboard.bluebook.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+com.apple.dock.plist	dev.warp.Warp-Stable	file:///Applications/com.apple.dock.plist%09dev.warp.Warp-Stable.app	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	
+Cursor	file:///Applications/Cursor.app/	recentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.todesktop.230313mzl4w4u92
+Opal	file:///Applications/Opal.app/	recentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.withopal.opalmacos
+Warp	file:///Applications/Warp.app/	recentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	dev.warp.Warp-Stable

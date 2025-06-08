@@ -1,0 +1,3 @@
+/Applications/Plover.app/|org.openstenoproject.plover
+/Applications/Arc.app/|company.thebrowser.Browser
+/Applications/ChatGPT.app/|com.openai.chat

@@ -1,0 +1,13 @@
+/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/|com.apple.Safari
+/System/Applications/Mail.app/|com.apple.mail
+/Applications/Spotify.app/|com.spotify.client
+/System/Applications/Utilities/Terminal.app/|com.apple.Terminal
+/Applications/TickTick.app/|com.TickTick.task.mac
+/Applications/Capacities.app/|io.capacities.app
+/Applications/Notion Calendar.app/|com.cron.electron
+/Applications/Opal.app/|com.withopal.opalmacos
+/Applications/Warp.app/|dev.warp.Warp-Stable
+/Applications/Cursor.app/|com.todesktop.230313mzl4w4u92
+/Applications/Plover.app/|org.openstenoproject.plover
+/Applications/Arc.app/|company.thebrowser.Browser
+/System/Applications/Messages.app/|com.apple.MobileSMS

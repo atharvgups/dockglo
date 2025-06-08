@@ -1,0 +1,8 @@
+/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app/|com.apple.Safari
+/System/Applications/Mail.app/|com.apple.mail
+/Applications/Cursor.app/|com.todesktop.230313mzl4w4u92
+/Applications/Opal.app/|com.withopal.opalmacos
+/Applications/Warp.app/|dev.warp.Warp-Stable
+/Applications/Plover.app/|org.openstenoproject.plover
+/Applications/Arc.app/|company.thebrowser.Browser
+/Applications/ChatGPT.app/|com.openai.chat

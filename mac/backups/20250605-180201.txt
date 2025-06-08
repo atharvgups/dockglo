@@ -1,0 +1,16 @@
+Messages	file:///System/Applications/Messages.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.apple.MobileSMS
+Arc	file:///Applications/Arc.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	company.thebrowser.Browser
+Podcasts	file:///System/Applications/Podcasts.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.apple.podcasts
+Discord	file:///Applications/Discord.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.hnc.Discord
+TickTick	file:///Applications/TickTick.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.TickTick.task.mac
+ChatGPT	file:///Applications/ChatGPT.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.openai.chat
+Cursor	file:///Applications/Cursor.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.todesktop.230313mzl4w4u92
+Capacities	file:///Applications/Capacities.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	io.capacities.app
+BambuStudio	file:///Applications/BambuStudio.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.bambulab.bambu-studio
+Autodesk
+Notion
+Spotify	file:///Applications/Spotify.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.spotify.client
+Opal	file:///Applications/Opal.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	com.withopal.opalmacos
+Plover	file:///Applications/Plover.app/	persistentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	org.openstenoproject.plover
+Bluebook	file:///Applications/Bluebook.app/	recentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	org.collegeboard.bluebook
+Warp	file:///Applications/Warp.app/	recentApps	/Users/atharvgupta/Library/Preferences/com.apple.dock.plist	dev.warp.Warp-Stable
