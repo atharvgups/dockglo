@@ -1,8 +1,7 @@
-// Swift code for event-tap to log clicks
 import Cocoa
 
-class DockGlo {
-    func startLoggingClicks() {
-        // Implementation for logging mouse clicks on the Dock goes here
+@objc public class DockGlo: NSObject {
+    @objc public func startLoggingClicks() -> Void {
+        // Set up event tap for logging clicks here
     }
 }
