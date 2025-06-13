@@ -38,6 +38,16 @@ class DockStats:
     # ---------- disk ---------- #
     def save(self, path: str = "dock_stats.json") -> None:
         Path(path).write_text(json.dumps({
+    def suggest_order(self):
+        """Order apps seeded with defaults.json if present."""
+        import json, pathlib
+        all_apps = set(self.wanted_counter)|set(self.landed_counter)
+        seed=[]
+        f=pathlib.Path("defaults.json")
+        if f.exists(): seed=json.load(f).get("pinned",[])
+        ordered=seed+[a for a in all_apps if a not in seed]
+        return ordered
+
             "wanted": self.wanted,
             "landed": self.landed,
             "mis": {f"{w}|{l}": n for (w, l), n in self.mis.items()},
