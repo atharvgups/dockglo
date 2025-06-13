@@ -31,7 +31,6 @@ class DockStats:
             self.misclick_counter[(wanted, landed)] += 1
 PY
 """Core logic for DockBeautifier."""
-from __future__ import annotations
 
 import json
 from collections import Counter
