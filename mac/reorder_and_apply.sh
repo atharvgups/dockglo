@@ -49,7 +49,7 @@ undo() {
   dockutil --remove all
   dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers  i=0
   while read -r ITEM; do
-      if [[ -e $ITEM && $ITEM == *spacer* ] && continue
+      [[ $ITEM == *spacer* ]] && continue  # skip spacer lines      if [[ -e $ITEM && $ITEM == *spacer* ] && continue
       if [ -e $ITEM && $ITEM == *.app ]]; then          # real .app path
           APP="$ITEM"
       else                                               # treat ITEM as BID
