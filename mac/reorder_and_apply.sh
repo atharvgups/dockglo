@@ -1,62 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
-REPO="$HOME/dev/dockglo"
-PY="$REPO/venv/bin/python"
-RESOLVE="$REPO/mac/resolve_app.sh"
-BACKUPS="$REPO/mac/backups"; mkdir -p "$BACKUPS"
-POINTER="$BACKUPS/.current"          # stores filename of last applied backup
-ts() { date +"%Y%m%d-%H%M%S"; }
 
-backup() { "$REPO/mac/backup_dock.sh" >"$BACKUPS/$(ts).txt"; }
+CMD=${1:-apply}                   # apply | undo
+SNAP_DIR="$HOME/.dockglo/snapshots"
+mkdir -p "$SNAP_DIR"
 
-resolve_path() {
-  local id="$1"; local path
-  path=$(grep "|$id\$" "$1" | cut -d'|' -f1 || true)
-  [[ -z $path ]] && path=$("$RESOLVE" "$id" || true)
-  [[ $path == NOTFOUND || $path == SKIP ]] && path=""
-  echo "$path"
+snap() {                          # create snapshot unless unchanged
+  NOW="$SNAP_DIR/$(date +%s).json"
+  dockutil --list > "$NOW"
+  LATEST=$(ls -t "$SNAP_DIR" | head -1)
+  [[ -f $SNAP_DIR/$LATEST ]] && diff -q "$SNAP_DIR/$LATEST" "$NOW" && rm "$NOW"
 }
 
 apply() {
-  pre="$BACKUPS/$(ts).txt"; backup      # snapshot BEFORE changes
-  echo "$pre" >"$POINTER"
-
-  ORDER="$("$PY" "$REPO/reorder.py")"
-  dockutil --remove all >/dev/null
-  for id in $ORDER; do
-    path=$(resolve_path "$pre" "$id")
-    [[ -z $path ]] && continue
-    dockutil --add "$path" >/dev/null
+  snap
+  dockutil --remove all           # clear dock
+  i=0
+  python reorder.py | while read -r BUNDLE; do
+    APP=$(mdfind "kMDItemCFBundleIdentifier == '$BUNDLE'" | head -1)
+    [[ -z $APP ]] && continue
+    dockutil --add "$APP" --section apps --position $(( ++i ))
   done
-  killall Dock
   echo "✨ Dock glowed!"
 }
 
 undo() {
-  [[ -f $POINTER ]] || { echo "No checkpoints to undo 😬"; exit 1; }
-  cur=$(cat "$POINTER")
-  all=($(ls -1t "$BACKUPS"/*.txt))
-  prev=""
-  for f in "${all[@]}"; do
-    [[ $f == "$cur" ]] && break
-    prev="$f"
+  PREV=$(ls -t "$SNAP_DIR" | sed -n '2p')
+  [[ -z $PREV ]] && { echo "Reached oldest snapshot"; exit 1; }
+  dockutil --remove all
+  i=0
+  awk -F'\t' '{print $1}' "$SNAP_DIR/$PREV" | while read -r APP; do
+    dockutil --add "$APP" --section apps --position $(( ++i ))
   done
-  [[ -z $prev ]] && { echo "Reached oldest snapshot"; exit 0; }
-  echo "$prev" >"$POINTER"
-
-  dockutil --remove all >/dev/null
-  while IFS='|' read -r path _; do
-    [[ -e $path ]] && dockutil --add "$path" >/dev/null
-  done <"$prev"
-  killall Dock
-  echo "↩️  Dock restored to $(basename "$prev")"
+  rm "$(ls -t "$SNAP_DIR" | head -1 | sed "s|^|$SNAP_DIR/|")"   # drop newest
+  echo "↩️  Undo → $(date -r "$PREV") complete."
 }
 
-list() { ls -1 "$BACKUPS" | sort; }
-
-case "${1:-apply}" in
+case "$CMD" in
   apply) apply ;;
-  undo)  undo  ;;
-  list)  list  ;;
-  *) echo "usage: $0 [apply|undo|list]" ;;
+  undo)  undo ;;
+  *) echo "Usage: $0 {apply|undo}" ;;
 esac
