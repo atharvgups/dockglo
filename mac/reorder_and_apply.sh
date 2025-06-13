@@ -5,33 +5,59 @@ CMD=${1:-apply}                           # apply | undo | list
 SNAP_DIR="$HOME/.dockglo/snapshots"
 mkdir -p "$SNAP_DIR"
 
-snapshot() {                              # always create a checkpoint
-  dockutil --list > "$SNAP_DIR/$(date +%s).txt"
+snapshot() {                              # store only .app paths or bundle-IDs
+  dockutil --list --section apps | awk -F'\t' '
+    ($1 ~ /\.app$/) {print $1}            # full path to an .app bundle
+    ($2 ~ /^[A-Za-z0-9_.-]+$/) {print $2} # or bundle-ID
+  ' > "$SNAP_DIR/$(date +%s).txt"
+}
+
+seed_defaults() {                         # once: dump current Dock bundle-IDs
+  python - <<PY
+import json, subprocess, pathlib, os, re, sys
+seed_file = pathlib.Path("defaults.json")
+if seed_file.exists(): sys.exit(0)
+lines = subprocess.check_output(["dockutil","--list","--section","apps"]).decode().splitlines()
+bids  = []
+for l in lines:
+    parts = l.split("\t")
+    if len(parts) > 1 and re.match(r'^[A-Za-z0-9_.-]+$', parts[1]):
+        bids.append(parts[1])
+json.dump({"pinned": bids}, open(seed_file,"w"), indent=2)
+print("✨ defaults.json seeded with", len(bids), "bundle IDs")
+PY
 }
 
 apply() {
-  snapshot                                # 1️⃣  save current Dock
+  seed_defaults
+  snapshot
   dockutil --remove all
-
+  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
   i=0
   python reorder.py | while read -r BID; do
     APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
-    [[ -z $APP ]] && continue             # skip if not installed
+    [[ -z $APP ]] && continue
     dockutil --add "$APP" --section apps --position $(( ++i )) >/dev/null
   done
   echo "✨ Dock glowed!"
 }
 
 undo() {
-  # newest file = last apply; second-newest = checkpoint we want
   PREV=$(ls -t "$SNAP_DIR" | sed -n '2p')
   [[ -z $PREV ]] && { echo "Reached oldest snapshot"; exit 1; }
 
   dockutil --remove all
-  i=0
-  awk -F'\t' '{print $1}' "$SNAP_DIR/$PREV" | while read -r APP; do
-    dockutil --add "$APP" --section apps --position $(( ++i )) >/dev/null
-  done
+  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers  i=0
+  while read -r ITEM; do
+      if [[ -e $ITEM && $ITEM == *spacer* ] && continue
+      if [ -e $ITEM && $ITEM == *.app ]]; then          # real .app path
+          APP="$ITEM"
+      else                                               # treat ITEM as BID
+          APP=$(mdfind "kMDItemCFBundleIdentifier == '$ITEM'" | head -1)
+      fi
+      [[ -z $APP ]] && continue
+      dockutil --add "$APP" --section apps --position $(( ++i )) >/dev/null
+  done < "$SNAP_DIR/$PREV"
   echo "↩️  Undo → $(date -r "$SNAP_DIR/$PREV") complete."
 }
 

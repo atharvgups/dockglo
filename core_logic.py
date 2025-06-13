@@ -26,7 +26,14 @@ class DockStats:
 
     def suggest_order(self) -> List[str]:
         apps = set(self.wanted) | set(self.landed)
-        return sorted(apps, key=lambda a: (-self._score(a), a))
+        
+    seed = []
+    import json, pathlib
+    f = pathlib.Path("defaults.json")
+    if f.exists():
+        seed = json.load(f).get("pinned", [])
+    ordered = seed + [a for a in all_apps if a not in seed]
+    return ordered
 
     # ---------- disk ---------- #
     def save(self, path: str = "dock_stats.json") -> None:
