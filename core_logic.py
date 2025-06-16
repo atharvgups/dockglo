@@ -8,7 +8,14 @@ class DockStats:
         self.misclick_counter = Counter()
 
     # ---------- scoring ----------
+    def _decay(self, ts: float) -> float:
+        """Weight = 2 for events <8 days old, else 1."""
+        import time, math
+        days = (time.time() - ts) / 86400
+        return 2.0 if days < 8 else 1.0
+
     def beauty_score(self, app_id: str) -> float:
+        """Recency-weighted beauty score."""
         wanted = self.wanted_counter.get(app_id, 0)
         mis = sum(c for (w, _), c in self.misclick_counter.items() if w == app_id)
         return wanted + mis * 2.0
