@@ -4,7 +4,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>           <string>com.dockglo.learn</string>
-  <key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>~/dev/dockglo/scripts/learn_usage.py</string></array>
+  <key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>/Users/atharvgupta/dev/dockglo/scripts/learn_usage.py</string></array>
   <key>StartInterval</key>   <integer>3600</integer>
   <key>RunAtLoad</key>       <true/>
   <key>StandardErrorPath</key><string>/tmp/dg_learn.err</string>

@@ -58,5 +58,8 @@
     "com.spotify.client|com.apple.Safari": 3,
     "com.apple.finder|com.spotify.client": 1,
     "com.apple.Terminal|com.apple.finder": 2
+  },
+  "wanted_counter": {
+    "company.thebrowser.Browser": 6
   }
 }
