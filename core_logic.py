@@ -20,7 +20,10 @@ class DockStats:
         f = pathlib.Path("defaults.json")
         if f.exists():
             seed = json.loads(f.read_text()).get("pinned", [])
-        ordered = seed + [a for a in all_apps if a not in seed]
+        # Sort remaining apps by beauty score (descending - higher scores first)
+        remaining_apps = [a for a in all_apps if a not in seed]
+        remaining_apps.sort(key=self.beauty_score, reverse=True)
+        ordered = seed + remaining_apps
         return ordered
 
     # ---------- recording ----------
@@ -29,11 +32,34 @@ class DockStats:
         self.landed_counter[landed] += 1
         if wanted != landed:
             self.misclick_counter[(wanted, landed)] += 1
-PY
-"""Core logic for DockBeautifier."""
 
-import json
-from collections import Counter
-from pathlib import Path
-from typing import List, Tuple
+    # ---------- loading ----------
+    @classmethod
+    def load(cls, filename="dock_stats.json"):
+        """Load DockStats from JSON file."""
+        import json
+        from pathlib import Path
+        
+        instance = cls()
+        stats_file = Path(filename)
+        
+        if stats_file.exists():
+            data = json.loads(stats_file.read_text())
+            
+            # Load wanted counter
+            if "wanted" in data:
+                instance.wanted_counter.update(data["wanted"])
+            
+            # Load landed counter
+            if "landed" in data:
+                instance.landed_counter.update(data["landed"])
+            
+            # Load misclick counter (convert from "app1|app2" format to (app1, app2) tuples)
+            if "mis" in data:
+                for key, count in data["mis"].items():
+                    if "|" in key:
+                        wanted, landed = key.split("|", 1)
+                        instance.misclick_counter[(wanted, landed)] = count
+        
+        return instance
 
