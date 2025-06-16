@@ -42,7 +42,14 @@ apply() {
 
     # If the app is already pinned remove it first; if that still fails use --replacing
     dockutil --remove "$APP" &>/dev/null || dockutil --remove "$BID" &>/dev/null || true
-    dockutil --add "$APP" --section apps --position $(( ++i )) 2>/dev/null \
+    # add / move the app into the *apps* section, directly after Finder
+    #   – --section apps keeps it left of the system divider
+    #   – --after ensures Finder stays truly first
+    dockutil --add "$APP" \
+             --section apps \
+             --after "/System/Library/CoreServices/Finder.app" \
+             --no-restart \
+             --label "$(basename "$APP")" 2>/dev/null \
       || dockutil --add "$APP" --section apps --replacing "$(basename "$APP" .app)" >/dev/null
 
     changed=1
