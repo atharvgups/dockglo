@@ -47,7 +47,9 @@ apply() {
 
     changed=1
   done
-  echo "✨ Dock glowed!"
+  # sweep others apps (duplicates) but keep folders/stacks\n
+  dockutil --list --section others | awk -F"\t" x27{if($1 ~ /\.app$/)print $1}x27 | while read -r D; do\n
+    dockutil --remove "$D" --section others &>/dev/null; done  echo "✨ Dock glowed!"
 }
 
 undo() {
