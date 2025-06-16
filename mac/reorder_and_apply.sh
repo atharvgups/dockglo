@@ -29,15 +29,23 @@ PY
 }
 
 apply() {
+  changed=0
   seed_defaults
   [[ $changed -eq 1 ]] && snapshot
   dockutil --remove all
-changed=0  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
+  changed=1
+  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
   i=0
   python reorder.py | while read -r BID; do
     APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
     [[ -z $APP ]] && continue
-    dockutil --add "$APP" --section apps --position $(( ++i )) 2>/tmp/dockerr || dockutil --add "$BID" --section apps --position $i >/dev/null
+
+    # If the app is already pinned remove it first; if that still fails use --replacing
+    dockutil --remove "$APP" &>/dev/null || dockutil --remove "$BID" &>/dev/null || true
+    dockutil --add "$APP" --section apps --position $(( ++i )) 2>/tmp/dg_add_err \
+      || dockutil --add "$APP" --section apps --replacing "$(basename "$APP" .app)" >/dev/null
+
+    changed=1
   done
   echo "✨ Dock glowed!"
 }
@@ -47,10 +55,11 @@ undo() {
   [[ -z $PREV ]] && { echo "Reached oldest snapshot"; exit 1; }
 
   dockutil --remove all
-changed=0  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers  i=0
+  dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
+  i=0
   while read -r ITEM; do
-      [[ $ITEM == *spacer* ]] && continue  # skip spacer lines      if [[ -e $ITEM && $ITEM == *spacer* ] && continue
-      if [ -e $ITEM && $ITEM == *.app ]]; then          # real .app path
+      [[ $ITEM == *spacer* ]] && continue  # skip spacer lines
+      if [[ -e $ITEM && $ITEM == *.app ]]; then          # real .app path
           APP="$ITEM"
       else                                               # treat ITEM as BID
           APP=$(mdfind "kMDItemCFBundleIdentifier == '$ITEM'" | head -1)
