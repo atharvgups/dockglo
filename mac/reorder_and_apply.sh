@@ -36,7 +36,8 @@ apply() {
   changed=1
   dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
   i=0
-  python reorder.py | while read -r BID; do
+  STYLE=${DG_STYLE:-score}           # DG_STYLE=rainbow to enable rainbow mode
+  python reorder.py "$STYLE" | while read -r BID; do
     APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
     [[ -z $APP ]] && continue
 

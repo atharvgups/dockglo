@@ -20,9 +20,38 @@ class DockStats:
         mis = sum(c for (w, _), c in self.misclick_counter.items() if w == app_id)
         return wanted + mis * 2.0
 
-    def suggest_order(self):
+    # ---------- colour helpers ----------
+    def _icon_hue(self, app_id: str) -> float:
+        """Return avg-hue (0-360) of an app's icon (cached)."""
+        from functools import lru_cache, wraps
+        import subprocess, json, pathlib, colorsys, os, tempfile
+        icon = pathlib.Path(f"/Applications/{app_id.split('.')[-1]}.app").with_suffix('.app')
+        @lru_cache(maxsize=None)
+        def _h(icon_path):
+            if not icon_path.exists():
+                return 0.0
+            with tempfile.TemporaryDirectory() as td:
+                # down-sample icon to 1 px and read its hex
+                out = pathlib.Path(td)/"1.png"
+                subprocess.run(["sips","-Z","1",str(icon_path/"Contents/Resources/AppIcon.icns"),
+                                "--out",str(out)],check=False,stdout=subprocess.DEVNULL)
+                rgb = subprocess.check_output(["sips","-g","pixelHex","--format","json",str(out)],
+                                              text=True)
+                hexcol = json.loads(rgb)["properties"]["pixelHex"].lstrip('#')
+                r,g,b = tuple(int(hexcol[i:i+2],16)/255 for i in (0,2,4))
+                h,_s,_v = colorsys.rgb_to_hsv(r,g,b)
+                return h*360
+        return _h(icon)
+
+    def suggest_order(self, style: str | None = None):
+        """Return list of bundle-ids sorted by score (default) or style == "rainbow"."""
         import json, pathlib
         all_apps = set(self.wanted_counter) | set(self.landed_counter)
+        
+        if style == "rainbow":
+            return sorted(all_apps, key=lambda a: self._icon_hue(a))
+        
+        # Default behavior - use beauty score with seed apps
         seed = []
         f = pathlib.Path("defaults.json")
         if f.exists():
