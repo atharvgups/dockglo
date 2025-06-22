@@ -24,23 +24,36 @@ class DockStats:
     def _icon_hue(self, app_id: str) -> float:
         """Return avg-hue (0-360) of an app's icon (cached)."""
         from functools import lru_cache, wraps
-        import subprocess, json, pathlib, colorsys, os, tempfile
+        import subprocess, json, pathlib, colorsys, os, tempfile, re
         icon = pathlib.Path(f"/Applications/{app_id.split('.')[-1]}.app").with_suffix('.app')
         @lru_cache(maxsize=None)
         def _h(icon_path):
             if not icon_path.exists():
                 return 0.0
-            with tempfile.TemporaryDirectory() as td:
-                # down-sample icon to 1 px and read its hex
-                out = pathlib.Path(td)/"1.png"
-                subprocess.run(["sips","-Z","1",str(icon_path/"Contents/Resources/AppIcon.icns"),
-                                "--out",str(out)],check=False,stdout=subprocess.DEVNULL)
-                rgb = subprocess.check_output(["sips","-g","pixelHex","--format","json",str(out)],
-                                              text=True)
-                hexcol = json.loads(rgb)["properties"]["pixelHex"].lstrip('#')
-                r,g,b = tuple(int(hexcol[i:i+2],16)/255 for i in (0,2,4))
-                h,_s,_v = colorsys.rgb_to_hsv(r,g,b)
-                return h*360
+            try:
+                with tempfile.TemporaryDirectory() as td:
+                    # down-sample icon to 1 px and read its hex
+                    out = pathlib.Path(td)/"1.png"
+                    subprocess.run(["sips","-Z","1",str(icon_path/"Contents/Resources/AppIcon.icns"),
+                                    "--out",str(out)],check=False,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                    
+                    # Use simpler sips command to get pixel color
+                    result = subprocess.run(["sips","-g","pixelHex",str(out)],
+                                          capture_output=True, text=True)
+                    if result.returncode != 0:
+                        return 0.0
+                    
+                    # Parse hex color from output
+                    match = re.search(r'pixelHex:\s*([0-9A-Fa-f]{6})', result.stdout)
+                    if not match:
+                        return 0.0
+                    
+                    hexcol = match.group(1)
+                    r,g,b = tuple(int(hexcol[i:i+2],16)/255 for i in (0,2,4))
+                    h,_s,_v = colorsys.rgb_to_hsv(r,g,b)
+                    return h*360
+            except Exception:
+                return 0.0
         return _h(icon)
 
     def suggest_order(self, style: str | None = None):
