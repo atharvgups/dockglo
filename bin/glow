@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-DOCKGLO_DIR="$HOME/dev/dockglo"
-cd "$DOCKGLO_DIR" || { echo "Error: DockGlo directory not found at $DOCKGLO_DIR"; exit 1; }
+REPO="$HOME/dev/dockglo"          # ← adjust if you keep it elsewhere
+cd "$REPO" || { echo "‼️  DockGlo repo not found"; exit 1; }
 
 case "$1" in
-  apply) DG_STYLE=${DG_STYLE:-score}  exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply ;;
-  rainbow) DG_STYLE=rainbow          exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply ;;
-  undo)  exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" undo ;;
-  glow|"")  "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply; sleep 2; "$DOCKGLO_DIR/mac/reorder_and_apply.sh" undo ;;
-  *) echo "usage: glow [apply|rainbow|undo|glow]"; exit 1 ;;
+  apply)   ./mac/reorder_and_apply.sh apply ;;
+  undo)    ./mac/reorder_and_apply.sh undo  ;;
+  rainbow)
+      ./mac/reorder_and_apply.sh backup   # fresh snapshot for undo
+      python scripts/rainbow_sort.py
+      ./mac/reorder_and_apply.sh apply ;;
+  smart)   python scripts/smart_reorder.py  && ./mac/reorder_and_apply.sh apply ;;
+  *) echo "usage: glow {apply|undo|rainbow|smart}" ; exit 1 ;;
 esac
