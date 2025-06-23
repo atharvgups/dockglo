@@ -15,8 +15,7 @@ snapshot() {                              # store only .app paths or bundle-IDs
 backup() {                                         # fresh backup JSON
   /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
     ~/Library/Preferences/com.apple.dock.plist |
-    jq -r '.[]|."tile-data"|."file-data"|._CFURLString' |
-    sed 's|^file://||' |
+    sed -n 's/.*_CFURLString *= *"file:\/\/\(.*\.app\)".*/\1/p' |
     jq -R -s -c 'split("\n")[:-1]' > Dock.backup.json
 }
 
@@ -46,8 +45,7 @@ apply() {
   backup_json="Dock.backup.json"
   /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
     ~/Library/Preferences/com.apple.dock.plist |
-    jq -r '.[]|."tile-data"|."file-data"|._CFURLString' |
-    sed 's|^file://||' |
+    sed -n 's/.*_CFURLString *= *"file:\/\/\(.*\.app\)".*/\1/p' |
     jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
   
   # Choose order file based on priority
