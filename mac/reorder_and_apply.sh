@@ -42,8 +42,13 @@ apply() {
   # ---------------------------------------------------------------------
   # ALWAYS create a brand-new backup so undo can fully restore the Dock.
   # ---------------------------------------------------------------------
+  # always fresh backup so undo restores unopened pins
   backup_json="Dock.backup.json"
-  dockutil --list --section apps | awk -F'\t' '{print $2}' | sed 's|file://||' | sed 's|%20| |g' | jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
+  /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
+    ~/Library/Preferences/com.apple.dock.plist |
+    jq -r '.[]|."tile-data"|."file-data"|._CFURLString' |
+    sed 's|^file://||' |
+    jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
   
   # Choose order file based on priority
   if   [ -f rainbow.order ];   then order_file=rainbow.order

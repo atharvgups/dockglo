@@ -62,7 +62,8 @@ class DockStats:
         icon = self._h(app_id)                # existing _h() = hex
         if icon:                              # fast path: hex → hue
             r,g,b = (int(icon[i:i+2],16)/255 for i in (0,2,4))
-            return colorsys.rgb_to_hsv(r,g,b)[0]*360
+            h,s,_ = colorsys.rgb_to_hsv(r,g,b)
+            return 999 if s < .15 else h*360   # greyscale → end
 
         # Slow path: ask macOS sips for pixel sample
         try:
@@ -77,14 +78,14 @@ class DockStats:
             if match:
                 hexcol = match.group(1)
                 r,g,b = (int(hexcol[i:i+2],16)/255 for i in (0,2,4))
-                return colorsys.rgb_to_hsv(r,g,b)[0]*360
+                h,s,_ = colorsys.rgb_to_hsv(r,g,b)
+                return 999 if s < .15 else h*360   # greyscale → end
             return 999.0
         except Exception:
             return 999.0                      # grey / error
 
     def suggest_order(self, style: str | None = None):
         """Return list of bundle-ids sorted by score (default) or style == "rainbow"."""
-        import json, pathlib
         all_apps = set(self.wanted_counter) | set(self.landed_counter)
         
         if style == "rainbow":
