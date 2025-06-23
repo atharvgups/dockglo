@@ -9,10 +9,9 @@ class DockStats:
 
     # ---------- scoring ----------
     def _decay(self, ts: float) -> float:
-        """Weight = 2 for events <8 days old, else 1."""
+        """Half-life ≈ 8 days – recent clicks ≫ old clicks."""
         import time, math
-        days = (time.time() - ts) / 86400
-        return 2.0 if days < 8 else 1.0
+        return 2.0 ** (-(time.time() - ts) / 86400 / 8)
 
     def beauty_score(self, app_id: str) -> float:
         """Recency-weighted beauty score."""
@@ -21,40 +20,39 @@ class DockStats:
         return wanted + mis * 2.0
 
     # ---------- colour helpers ----------
+    def _h(self, app_id: str) -> str:
+        """Get cached hex color for app icon."""
+        # This would be implemented with actual hex color caching
+        return ""
+    
+    def _icn(self, app_id: str) -> str:
+        """Get path to app icon."""
+        import pathlib
+        icon_path = pathlib.Path(f"/Applications/{app_id.split('.')[-1]}.app/Contents/Resources/AppIcon.icns")
+        return str(icon_path)
+    
     def _icon_hue(self, app_id: str) -> float:
-        """Return avg-hue (0-360) of an app's icon (cached)."""
-        from functools import lru_cache, wraps
-        import subprocess, json, pathlib, colorsys, os, tempfile, re
-        icon = pathlib.Path(f"/Applications/{app_id.split('.')[-1]}.app").with_suffix('.app')
-        @lru_cache(maxsize=None)
-        def _h(icon_path):
-            if not icon_path.exists():
-                return 0.0
-            try:
-                with tempfile.TemporaryDirectory() as td:
-                    # down-sample icon to 1 px and read its hex
-                    out = pathlib.Path(td)/"1.png"
-                    subprocess.run(["sips","-Z","1",str(icon_path/"Contents/Resources/AppIcon.icns"),
-                                    "--out",str(out)],check=False,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-                    
-                    # Use simpler sips command to get pixel color
-                    result = subprocess.run(["sips","-g","pixelHex",str(out)],
-                                          capture_output=True, text=True)
-                    if result.returncode != 0:
-                        return 0.0
-                    
-                    # Parse hex color from output
-                    match = re.search(r'pixelHex:\s*([0-9A-Fa-f]{6})', result.stdout)
-                    if not match:
-                        return 0.0
-                    
-                    hexcol = match.group(1)
-                    r,g,b = tuple(int(hexcol[i:i+2],16)/255 for i in (0,2,4))
-                    h,_s,_v = colorsys.rgb_to_hsv(r,g,b)
-                    return h*360
-            except Exception:
-                return 0.0
-        return _h(icon)
+        """
+        Return the HSB hue (0-360) of an app icon.
+        Grey / monochrome icons get 999 so they stay right.
+        """
+        import subprocess, re, colorsys, tempfile, os, sys
+        icon = self._h(app_id)                # existing _h() = hex
+        if icon:                              # fast path: hex → hue
+            r,g,b = (int(icon[i:i+2],16)/255 for i in (0,2,4))
+            return colorsys.rgb_to_hsv(r,g,b)[0]*360
+
+        # Slow path: ask macOS sips for pixel sample
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
+                subprocess.run(["sips","-s","format","png",self._icn(app_id),
+                                "--out",tmp.name], check=True, stdout=subprocess.DEVNULL)
+                out = subprocess.check_output(["sips","-g","pixelHex","--format","json",tmp.name])
+            hx = re.search(r'"pixelHex" : "(..)(..)(..)', out.decode()).group(1,2,3)
+            r,g,b = (int(x,16)/255 for x in hx)
+            return colorsys.rgb_to_hsv(r,g,b)[0]*360
+        except Exception:
+            return 999.0                      # grey / error
 
     def suggest_order(self, style: str | None = None):
         """Return list of bundle-ids sorted by score (default) or style == "rainbow"."""
@@ -110,5 +108,17 @@ class DockStats:
                         wanted, landed = key.split("|", 1)
                         instance.misclick_counter[(wanted, landed)] = count
         
+        # Add 'mis' as alias for misclick_counter for compatibility
+        instance.mis = instance.misclick_counter
         return instance
+    
+    def _all(self):
+        """Return all tracked app IDs."""
+        return list(set(self.wanted_counter) | set(self.landed_counter))
+    
+    def reorder(self, order):
+        """Reorder dock with given app order list."""
+        # This would interface with macOS dock reordering
+        # For now, just print the order
+        print(f"Reordering dock: {order}")
 

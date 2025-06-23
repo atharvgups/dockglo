@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
+DOCKGLO_DIR="$HOME/dev/dockglo"
+cd "$DOCKGLO_DIR" || { echo "Error: DockGlo directory not found at $DOCKGLO_DIR"; exit 1; }
+
 case "$1" in
-  apply) DG_STYLE=${DG_STYLE:-score}  exec "$PWD/mac/reorder_and_apply.sh" apply ;;
-  rainbow) DG_STYLE=rainbow          exec "$PWD/mac/reorder_and_apply.sh" apply ;;
-  undo)  exec "$PWD/mac/reorder_and_apply.sh" undo ;;
-  glow|"")  ./mac/reorder_and_apply.sh apply; sleep 2; ./mac/reorder_and_apply.sh undo ;;
+  apply) DG_STYLE=${DG_STYLE:-score}  exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply ;;
+  rainbow) DG_STYLE=rainbow          exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply ;;
+  undo)  exec "$DOCKGLO_DIR/mac/reorder_and_apply.sh" undo ;;
+  glow|"")  "$DOCKGLO_DIR/mac/reorder_and_apply.sh" apply; sleep 2; "$DOCKGLO_DIR/mac/reorder_and_apply.sh" undo ;;
   *) echo "usage: glow [apply|rainbow|undo|glow]"; exit 1 ;;
 esac
