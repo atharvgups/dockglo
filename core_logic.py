@@ -90,16 +90,10 @@ class DockStats:
         if style == "rainbow":
             return sorted(all_apps, key=lambda a: self._icon_hue(a))
         
-        # Default behavior - use beauty score with seed apps
-        seed = []
-        f = pathlib.Path("defaults.json")
-        if f.exists():
-            seed = json.loads(f.read_text()).get("pinned", [])
-        # Sort remaining apps by beauty score (descending - higher scores first)
-        remaining_apps = [a for a in all_apps if a not in seed]
-        remaining_apps.sort(key=self.beauty_score, reverse=True)
-        ordered = seed + remaining_apps
-        return ordered
+        # ---------- order: everything the learner knows ----------
+        # `all_apps` already includes every pinned & seen app, so
+        # just return it – no baked-in defaults.
+        return list(all_apps)
 
     # ---------- recording ----------
     def record(self, wanted: str, landed: str):

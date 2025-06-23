@@ -30,6 +30,22 @@ PY
 
 apply() {
   changed=0
+  
+  # ---------------------------------------------------------------------
+  # ALWAYS create a brand-new backup so undo can fully restore the Dock.
+  # ---------------------------------------------------------------------
+  backup_json="Dock.backup.json"
+  /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
+       ~/Library/Preferences/com.apple.dock.plist 2>/dev/null |
+    jq -r '.[]."tile-data"."file-data"._CFURLString' |
+    sed 's|^file://||' |
+    jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
+  
+  # Choose order file based on priority
+  if   [ -f rainbow.order ];   then order_file=rainbow.order
+  elif [ -f order.smart   ];   then order_file=order.smart
+  else                              order_file=order.json;  fi
+  
   seed_defaults
   [[ $changed -eq 1 ]] && snapshot
   dockutil --remove all
@@ -38,7 +54,11 @@ apply() {
   i=0
   STYLE=${DG_STYLE:-score}           # DG_STYLE=rainbow to enable rainbow mode
   # First, collect all bundle IDs and process them
-  readarray -t BUNDLE_IDS < <(python reorder.py "$STYLE")
+  if [ -f "$order_file" ]; then
+    readarray -t BUNDLE_IDS < <(jq -r '.[]' "$order_file")
+  else
+    readarray -t BUNDLE_IDS < <(python reorder.py "$STYLE")
+  fi
   
   # Track apps we've already added to avoid duplicates
   declare -A ADDED_APPS
