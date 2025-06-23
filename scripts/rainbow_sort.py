@@ -32,7 +32,8 @@ def hue(app_path):
                 text=True, timeout=2)
             hx = re.search(r'pixelHex:\s*0x([0-9A-Fa-f]{6})', out).group(1)
             r,g,b = (int(hx[i:i+2],16)/255 for i in (0,2,4))
-            return colorsys.rgb_to_hsv(r,g,b)[0]*360
+            h,s,_ = colorsys.rgb_to_hsv(r,g,b)
+            return 999 if s < .15 else h*360      # greys last
     except Exception:
         return 999          # greys to the far right
 apps_sorted = sorted(apps, key=hue)

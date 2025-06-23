@@ -12,6 +12,14 @@ snapshot() {                              # store only .app paths or bundle-IDs
   ' > "$SNAP_DIR/$(date +%s).txt"
 }
 
+backup() {                                         # fresh backup JSON
+  /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
+    ~/Library/Preferences/com.apple.dock.plist |
+    jq -r '.[]|."tile-data"|."file-data"|._CFURLString' |
+    sed 's|^file://||' |
+    jq -R -s -c 'split("\n")[:-1]' > Dock.backup.json
+}
+
 seed_defaults() {                         # once: dump current Dock bundle-IDs
   python - <<PY
 import json, subprocess, pathlib, os, re, sys
@@ -135,6 +143,20 @@ PY
   fi
   echo "✨ Dock glowed!"
 }
+
+# -------- undo: reload the most-recent backup ---------- #
+if [ "$1" = "undo" ]; then
+  test -f Dock.backup.json || { echo "❗ no backup"; exit 1; }
+  jq -r '.[]' Dock.backup.json > /tmp/dock.undo.list
+  killall Dock; defaults delete com.apple.dock persistent-apps
+  while read -r a; do defaults write com.apple.dock persistent-apps -array-add "{\"tile-data\":{\"file-data\":{\"_CFURLString\":\"file://$a\",\"_CFURLStringType\":0}}}"; done < /tmp/dock.undo.list
+  killall Dock
+  echo "↩️  Undo → $(date) complete."
+  exit 0
+fi
+
+# take a fresh backup *before* doing anything else
+backup
 
 undo() {
   PREV=$(ls -t "$SNAP_DIR" | sed -n '2p')
