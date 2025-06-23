@@ -37,21 +37,48 @@ apply() {
   dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
   i=0
   STYLE=${DG_STYLE:-score}           # DG_STYLE=rainbow to enable rainbow mode
-  python reorder.py "$STYLE" | while read -r BID; do
-    APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
+  # First, collect all bundle IDs and process them
+  readarray -t BUNDLE_IDS < <(python reorder.py "$STYLE")
+  
+  # Track apps we've already added to avoid duplicates
+  declare -A ADDED_APPS
+  
+  for BID in "${BUNDLE_IDS[@]}"; do
+    # Find the app, prefer standard locations over system volumes
+    APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | grep -v "/System/Volumes/" | head -1)
+    if [[ -z $APP ]]; then
+      APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
+    fi
+    
     [[ -z $APP ]] && continue
+    
+    # Check if the app actually exists before proceeding
+    if [[ ! -e "$APP" ]]; then
+        echo "Warning: App not found at path: $APP"
+        continue
+    fi
 
-    # If the app is already pinned remove it first; if that still fails use --replacing
-    dockutil --remove "$APP" &>/dev/null || dockutil --remove "$BID" &>/dev/null || true
+    # Skip if we've already added this app (by name)
+    APP_NAME="$(basename "$APP" .app)"
+    if [[ -n "${ADDED_APPS[$APP_NAME]:-}" ]]; then
+        continue
+    fi
+    ADDED_APPS[$APP_NAME]=1
+
+    echo "adding $APP"
+    # If the app is already pinned remove it first
+    dockutil --remove "$APP" &>/dev/null || true
     # add / move the app into the *apps* section, directly after Finder
     #   – --section apps keeps it left of the system divider
     #   – --after ensures Finder stays truly first
-    dockutil --add "$APP" \
+    if ! dockutil --add "$APP" \
              --section apps \
              --after "/System/Library/CoreServices/Finder.app" \
              --no-restart \
-             --label "$(basename "$APP")" 2>/dev/null \
-      || dockutil --add "$APP" --section apps --replacing "$(basename "$APP" .app)" >/dev/null
+             --label "$(basename "$APP")" 2>/dev/null; then
+      # Fallback: try adding with replacement
+      dockutil --add "$APP" --section apps --replacing "$APP_NAME" >/dev/null 2>&1 || true
+    fi
 
     changed=1
   done
