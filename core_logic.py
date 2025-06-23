@@ -27,9 +27,31 @@ class DockStats:
     
     def _icn(self, app_id: str) -> str:
         """Get path to app icon."""
-        import pathlib
-        icon_path = pathlib.Path(f"/Applications/{app_id.split('.')[-1]}.app/Contents/Resources/AppIcon.icns")
-        return str(icon_path)
+        import pathlib, glob
+        # Map common bundle IDs to actual app names
+        app_map = {
+            'com.apple.finder': 'Finder',
+            'com.apple.Safari': 'Safari', 
+            'com.apple.Terminal': 'Terminal',
+            'com.apple.Mail': 'Mail',
+            'com.microsoft.VSCode': 'Visual Studio Code',
+            'com.google.Chrome': 'Google Chrome',
+            'com.spotify.client': 'Spotify'
+        }
+        
+        app_name = app_map.get(app_id, app_id.split('.')[-1])
+        
+        # Try different possible paths
+        for path in [
+            f"/Applications/{app_name}.app/Contents/Resources/AppIcon.icns",
+            f"/System/Applications/{app_name}.app/Contents/Resources/AppIcon.icns", 
+            f"/Applications/{app_name}.app/Contents/Resources/*.icns"
+        ]:
+            matches = glob.glob(path)
+            if matches:
+                return matches[0]
+        
+        return ""
     
     def _icon_hue(self, app_id: str) -> float:
         """
@@ -45,12 +67,18 @@ class DockStats:
         # Slow path: ask macOS sips for pixel sample
         try:
             with tempfile.NamedTemporaryFile(suffix=".png") as tmp:
+                # First convert to PNG
                 subprocess.run(["sips","-s","format","png",self._icn(app_id),
-                                "--out",tmp.name], check=True, stdout=subprocess.DEVNULL)
-                out = subprocess.check_output(["sips","-g","pixelHex","--format","json",tmp.name])
-            hx = re.search(r'"pixelHex" : "(..)(..)(..)', out.decode()).group(1,2,3)
-            r,g,b = (int(x,16)/255 for x in hx)
-            return colorsys.rgb_to_hsv(r,g,b)[0]*360
+                                "--out",tmp.name], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # Then get pixel color - use simpler format
+                out = subprocess.check_output(["sips","-g","pixelHex",tmp.name], stderr=subprocess.DEVNULL)
+            # Parse simple format: pixelHex: RRGGBB
+            match = re.search(r'pixelHex:\s*([0-9A-Fa-f]{6})', out.decode())
+            if match:
+                hexcol = match.group(1)
+                r,g,b = (int(hexcol[i:i+2],16)/255 for i in (0,2,4))
+                return colorsys.rgb_to_hsv(r,g,b)[0]*360
+            return 999.0
         except Exception:
             return 999.0                      # grey / error
 

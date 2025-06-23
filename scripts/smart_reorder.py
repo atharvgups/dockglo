@@ -5,19 +5,23 @@ Smart reorder:
 2. Second pass: least-mis-clicked & most-wanted apps (decay-weighted).
 3. Never put two hot-spot (high-mis-click) neighbours adjacent.
 """
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core_logic import DockStats
 ds = DockStats.load()
 all_apps = ds._all()
 
 def score(a):
-    w = sum(c*ds._decay(ts) for ts,c in ds.wanted_counter.get(a,[]))
-    m = sum(c*ds._decay(ts) for (_,l),(ts,c) in ds.mis.items() if _==a or l==a)
+    # Simple scoring based on existing counters
+    w = ds.wanted_counter.get(a, 0)
+    m = sum(c for (w_app, l_app), c in ds.mis.items() if w_app == a or l_app == a)
     return w - 2*m
 
 ordered = sorted(all_apps, key=score, reverse=True)
 
 # hot-spot spacing
-HOT = {a for a in all_apps if sum(c for (_,l),(ts,c) in ds.mis.items() if _==a or l==a) > 3}
+HOT = {a for a in all_apps if sum(c for (w_app, l_app), c in ds.mis.items() if w_app == a or l_app == a) > 3}
 final=[]
 for a in ordered:
     if a in HOT and final and final[-1] in HOT:
