@@ -6,9 +6,10 @@ case "$1" in
   apply)   ./mac/reorder_and_apply.sh apply ;;
   undo)    ./mac/reorder_and_apply.sh undo  ;;
   rainbow)
-      ./mac/reorder_and_apply.sh backup   # fresh snapshot for undo
-      python scripts/rainbow_sort.py
-      ./mac/reorder_and_apply.sh apply ;;
+      python scripts/_backup_dock.py            # 1) full snapshot
+      python scripts/rainbow_sort.py            # 2) write rainbow.order
+      ./mac/reorder_and_apply.sh apply rainbow  # 3) apply that order
+      ;;
   smart)   python scripts/smart_reorder.py  && ./mac/reorder_and_apply.sh apply ;;
   *) echo "usage: glow {apply|undo|rainbow|smart}" ; exit 1 ;;
 esac
