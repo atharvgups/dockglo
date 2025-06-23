@@ -35,11 +35,7 @@ apply() {
   # ALWAYS create a brand-new backup so undo can fully restore the Dock.
   # ---------------------------------------------------------------------
   backup_json="Dock.backup.json"
-  /usr/libexec/PlistBuddy -c 'Print persistent-apps' \
-       ~/Library/Preferences/com.apple.dock.plist 2>/dev/null |
-    jq -r '.[]."tile-data"."file-data"._CFURLString' |
-    sed 's|^file://||' |
-    jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
+  dockutil --list --section apps | awk -F'\t' '{print $2}' | sed 's|file://||' | sed 's|%20| |g' | jq -R -s -c 'split("\n")[:-1]' > "$backup_json"
   
   # Choose order file based on priority
   if   [ -f rainbow.order ];   then order_file=rainbow.order
@@ -53,55 +49,70 @@ apply() {
   dockutil --remove spacer &>/dev/null || true   # nuke rogue spacers
   i=0
   STYLE=${DG_STYLE:-score}           # DG_STYLE=rainbow to enable rainbow mode
-  # First, collect all bundle IDs and process them
+  # Process each app/path from the order file or reorder.py
   if [ -f "$order_file" ]; then
-    readarray -t BUNDLE_IDS < <(jq -r '.[]' "$order_file")
+    jq -r '.[]' "$order_file" | while read -r APP_PATH; do
+      # For rainbow.order, we already have full paths
+      if [[ -e "$APP_PATH" ]]; then
+        APP="$APP_PATH"
+      else
+        # Try as bundle ID
+        APP=$(mdfind "kMDItemCFBundleIdentifier == '$APP_PATH'" | head -1)
+      fi
+      
+      [[ -z $APP ]] && continue
+
+      echo "adding $APP"
+      # If the app is already pinned remove it first
+      dockutil --remove "$APP" &>/dev/null || true
+      # add / move the app into the *apps* section, directly after Finder
+      #   – --section apps keeps it left of the system divider
+      #   – --after ensures Finder stays truly first
+      if ! dockutil --add "$APP" \
+               --section apps \
+               --after "/System/Library/CoreServices/Finder.app" \
+               --no-restart \
+               --label "$(basename "$APP")" 2>/dev/null; then
+        # Fallback: try adding with replacement
+        dockutil --add "$APP" --section apps --replacing "$(basename "$APP" .app)" >/dev/null 2>&1 || true
+      fi
+
+      changed=1
+    done
   else
-    readarray -t BUNDLE_IDS < <(python reorder.py "$STYLE")
+    python reorder.py "$STYLE" | while read -r BID; do
+      # Find the app, prefer standard locations over system volumes
+      APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | grep -v "/System/Volumes/" | head -1)
+      if [[ -z $APP ]]; then
+        APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
+      fi
+      
+      [[ -z $APP ]] && continue
+      
+      # Check if the app actually exists before proceeding
+      if [[ ! -e "$APP" ]]; then
+          echo "Warning: App not found at path: $APP"
+          continue
+      fi
+
+      echo "adding $APP"
+      # If the app is already pinned remove it first
+      dockutil --remove "$APP" &>/dev/null || true
+      # add / move the app into the *apps* section, directly after Finder
+      #   – --section apps keeps it left of the system divider
+      #   – --after ensures Finder stays truly first
+      if ! dockutil --add "$APP" \
+               --section apps \
+               --after "/System/Library/CoreServices/Finder.app" \
+               --no-restart \
+               --label "$(basename "$APP")" 2>/dev/null; then
+        # Fallback: try adding with replacement
+        dockutil --add "$APP" --section apps --replacing "$(basename "$APP" .app)" >/dev/null 2>&1 || true
+      fi
+
+      changed=1
+    done
   fi
-  
-  # Track apps we've already added to avoid duplicates
-  declare -A ADDED_APPS
-  
-  for BID in "${BUNDLE_IDS[@]}"; do
-    # Find the app, prefer standard locations over system volumes
-    APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | grep -v "/System/Volumes/" | head -1)
-    if [[ -z $APP ]]; then
-      APP=$(mdfind "kMDItemCFBundleIdentifier == '$BID'" | head -1)
-    fi
-    
-    [[ -z $APP ]] && continue
-    
-    # Check if the app actually exists before proceeding
-    if [[ ! -e "$APP" ]]; then
-        echo "Warning: App not found at path: $APP"
-        continue
-    fi
-
-    # Skip if we've already added this app (by name)
-    APP_NAME="$(basename "$APP" .app)"
-    if [[ -n "${ADDED_APPS[$APP_NAME]:-}" ]]; then
-        continue
-    fi
-    ADDED_APPS[$APP_NAME]=1
-
-    echo "adding $APP"
-    # If the app is already pinned remove it first
-    dockutil --remove "$APP" &>/dev/null || true
-    # add / move the app into the *apps* section, directly after Finder
-    #   – --section apps keeps it left of the system divider
-    #   – --after ensures Finder stays truly first
-    if ! dockutil --add "$APP" \
-             --section apps \
-             --after "/System/Library/CoreServices/Finder.app" \
-             --no-restart \
-             --label "$(basename "$APP")" 2>/dev/null; then
-      # Fallback: try adding with replacement
-      dockutil --add "$APP" --section apps --replacing "$APP_NAME" >/dev/null 2>&1 || true
-    fi
-
-    changed=1
-  done
   # sweep others apps (duplicates) but keep folders/stacks
   dockutil --list --section others | awk -F"\t" '{if($1 ~ /\.app$/)print $1}' | while read -r D; do
     dockutil --remove "$D" --section others &>/dev/null; done
